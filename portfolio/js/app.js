@@ -114,6 +114,12 @@
         if (navDash) navDash.style.display = isStudent() ? 'none' : '';
         var titleEst = document.querySelector('#estudiantes .section-title');
         if (titleEst) titleEst.textContent = isStudent() ? 'Mi Avance Académico' : 'Estudiantes por Asignatura';
+        var userBar = document.getElementById('headerUser');
+        if (userBar) {
+            if (isStudent() && currentUser) userBar.innerHTML = '👤 ' + currentUser.name + ' <span class="role-badge student">Estudiante</span>';
+            else if (currentUser) userBar.innerHTML = '👤 ' + (currentUser.username || 'docente') + ' <span class="role-badge teacher">Docente</span>';
+            else userBar.innerHTML = '';
+        }
     }
 
     function $(sel) { return document.querySelector(sel); }
