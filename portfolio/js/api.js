@@ -8,7 +8,7 @@
 
     // 👉 En producción apunta aquí a tu API en Railway, ej:
     // window.API_BASE_URL = 'https://portafolio-api.up.railway.app';
-    window.API_BASE_URL = window.API_BASE_URL || '';
+    window.API_BASE_URL = window.API_BASE_URL || 'https://portafolio-api-production-a925.up.railway.app';
 
     function useApi() {
         return !!window.API_BASE_URL;
