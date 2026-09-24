@@ -773,6 +773,54 @@
         renderDashboard();
     }
 
+    function getStudentSearch() {
+        var input = document.getElementById('studentSearch');
+        return input ? normText(input.value) : '';
+    }
+
+    function openEditStudent(id) {
+        var list = STUDENTS[currentStudentCourse] || [];
+        var st = list.find(function(s) { return s.id === id; });
+        if (!st) return;
+        closeModal('editModal');
+        var modal = document.createElement('div');
+        modal.id = 'editModal';
+        modal.className = 'edit-modal';
+        modal.innerHTML = '<div class="edit-modal-content"><div class="edit-modal-header"><h3>✏️ Editar Estudiante</h3><p>Modifica los datos del estudiante</p></div><div class="edit-modal-body"><form id="editStudentForm"><div class="form-group"><label for="editStudentName">Apellidos y Nombres</label><input type="text" id="editStudentName" value="' + st.name + '" required maxlength="100"></div><div class="form-group"><label for="editStudentCode">Código</label><input type="text" id="editStudentCode" value="' + (st.code || '') + '" required maxlength="20"></div><div class="form-group"><label>Contraseña actual</label><input type="text" value="' + (st.pass || '') + '" disabled></div></form></div><div class="edit-modal-footer"><button class="btn btn-secondary" onclick="closeModal(\'editModal\')">Cancelar</button><button class="btn btn-primary" onclick="App.saveEditStudent(' + id + ')">💾 Guardar Cambios</button></div></div>';
+        document.body.appendChild(modal);
+        requestAnimationFrame(function() { modal.classList.add('active'); });
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeModal('editModal'); });
+    }
+
+    function saveEditStudent(id) {
+        var name = document.getElementById('editStudentName')?.value.trim();
+        var code = document.getElementById('editStudentCode')?.value.trim();
+        if (!name || !code) { showToast('error', 'Nombre y código son obligatorios.'); return; }
+        var list = STUDENTS[currentStudentCourse] || [];
+        var dup = list.find(function(s) { return s.id !== id && normText(s.code) === normText(code); });
+        if (dup) { showToast('error', 'Ya existe otro estudiante con ese código.'); return; }
+        var st = list.find(function(s) { return s.id === id; });
+        if (st) { st.name = name; st.code = code; }
+        sortStudents(currentStudentCourse);
+        saveStudents();
+        closeModal('editModal');
+        renderStudents();
+        showToast('success', '✅ Estudiante actualizado.');
+    }
+
+    function markAllPresent() {
+        var list = STUDENTS[currentStudentCourse] || [];
+        if (list.length === 0) { showToast('info', 'No hay estudiantes en esta asignatura.'); return; }
+        var week = getCurrentWeek();
+        list.forEach(function(st) {
+            if (!st.attendance) st.attendance = {};
+            st.attendance[week] = 'P';
+        });
+        saveStudents();
+        renderStudents();
+        showToast('success', '✅ Semana ' + week + ': todos marcados presentes.');
+    }
+
     function renderStudentsSummary(list) {
         var el = document.getElementById('studentsSummary');
         if (!el) return;
