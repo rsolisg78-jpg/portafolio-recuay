@@ -389,7 +389,13 @@ code {
 .hamburger::before, .hamburger::after { content: ''; position: absolute; left: 0; width: 100%; height: 2px; background: var(--text-primary); border-radius: var(--radius-full); transition: transform var(--transition-normal); }
 .hamburger::before { top: -7px; } .hamburger::after { bottom: -7px; }
 .header-actions { display: flex; align-items: center; gap: 1rem; justify-self: end; flex-shrink: 0; }
-@media (max-width: 1599px) {
+@media (max-width: 1599px) and (min-width: 1024px) {
+    .logo-text { display: none; }
+    .nav-link { padding: 0.45rem 0.55rem; font-size: 0.78rem; }
+    .header-container { gap: 0.5rem; padding-left: 1rem; padding-right: 1rem; }
+    .header-actions { gap: 0.5rem; }
+}
+@media (max-width: 1023px) {
     .mobile-menu-btn { display: flex; }
     .nav {
         position: fixed; top: var(--header-height); left: 0; right: 0;
