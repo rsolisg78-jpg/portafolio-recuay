@@ -696,6 +696,13 @@ main { min-height: calc(100vh - var(--header-height)); }
 .att-p.active { background: var(--success); border-color: var(--success); color: #fff; }
 .att-t.active { background: var(--warning); border-color: var(--warning); color: #fff; }
 .att-f.active { background: var(--danger); border-color: var(--danger); color: #fff; }
+.att-static {
+    display: inline-block; padding: 0.375rem 1rem; border-radius: var(--radius-full);
+    font-size: 0.8rem; font-weight: 700; background: var(--bg-tertiary); color: var(--text-muted);
+}
+.att-static.att-P { background: rgba(0, 200, 83, 0.15); color: var(--success); }
+.att-static.att-T { background: rgba(255, 193, 7, 0.2); color: #B7860B; }
+.att-static.att-F { background: rgba(255, 23, 68, 0.12); color: var(--danger); }
 .grade-input {
     width: 64px; padding: 0.5rem; text-align: center;
     border: 2px solid var(--border-light); border-radius: var(--radius-md);
@@ -1166,7 +1173,6 @@ main { min-height: calc(100vh - var(--header-height)); }
     font-size: 0.9rem; color: var(--text-secondary);
 }
 .constancia-info strong { color: var(--text-primary); }
-.my-card-side { display: flex; flex-direction: column; align-items: flex-end; gap: 0.625rem; flex-shrink: 0; }
 
 /* --- Vista estudiante --- */
 .student-mode .course-actions-bar,
@@ -1184,25 +1190,8 @@ main { min-height: calc(100vh - var(--header-height)); }
 .student-mode .actions-section:not(.actions-section-spaced) { display: none !important; }
 .student-mode .section-actions-header { justify-content: center; }
 .student-mode .section-actions-header .btn { display: none !important; }
-.my-progress { display: grid; gap: 1.5rem; }
-.my-hello { font-size: 1.125rem; color: var(--text-secondary); text-align: center; }
-.my-hello span { color: var(--text-muted); font-size: 0.875rem; }
-.my-card {
-    background: var(--surface); border: 1px solid var(--border-light);
-    border-radius: var(--radius-xl); padding: 2rem; box-shadow: var(--shadow-sm);
-}
-.my-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
-.my-card-header h4 { font-size: 1.15rem; color: var(--primary); margin-bottom: 0.75rem; }
-.my-stats { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.wk-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.wk-chip {
-    font-size: 0.72rem; font-weight: 700; padding: 0.375rem 0.625rem;
-    border-radius: var(--radius-md); background: var(--bg-tertiary);
-    border: 1px solid var(--border-light); color: var(--text-muted);
-}
-.wk-chip.wk-P { background: rgba(0, 200, 83, 0.12); border-color: var(--success); color: var(--success); }
-.wk-chip.wk-T { background: rgba(255, 193, 7, 0.15); border-color: var(--warning); color: #B7860B; }
-.wk-chip.wk-F { background: rgba(255, 23, 68, 0.1); border-color: var(--danger); color: var(--danger); }
+.student-mode .students-toolbar .btn { display: none !important; }
+.student-mode #riskCard { display: none !important; }
 
 /* --- Animations --- */
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }

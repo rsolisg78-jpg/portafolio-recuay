@@ -108,12 +108,6 @@
 
     function applyRoleUI() {
         document.body.classList.toggle('student-mode', isStudent());
-        var navEst = document.querySelector('.nav-link[data-section="estudiantes"]');
-        if (navEst) navEst.textContent = isStudent() ? 'Mi Avance' : 'Estudiantes';
-        var navDash = document.querySelector('.nav-link[data-section="dashboard"]');
-        if (navDash) navDash.style.display = isStudent() ? 'none' : '';
-        var titleEst = document.querySelector('#estudiantes .section-title');
-        if (titleEst) titleEst.textContent = isStudent() ? 'Mi Avance Académico' : 'Estudiantes por Asignatura';
         var userBar = document.getElementById('headerUser');
         if (userBar) {
             if (isStudent() && currentUser) userBar.innerHTML = '👤 ' + currentUser.name + ' <span class="role-badge student">Estudiante</span>';
@@ -716,24 +710,6 @@
     function renderStudents() {
         var body = document.getElementById('studentsBody');
         if (!body) return;
-        var tableWrap = document.getElementById('studentsTableWrap');
-        var toolbar = document.querySelector('#estudiantes .students-toolbar');
-        var addForm = document.querySelector('#estudiantes .add-student-section');
-        var filters = document.getElementById('studentFilters');
-        var myBox = document.getElementById('myProgress');
-        if (isStudent()) {
-            if (tableWrap) tableWrap.classList.add('hidden');
-            if (toolbar) toolbar.classList.add('hidden');
-            if (addForm) addForm.classList.add('hidden');
-            if (filters) filters.classList.add('hidden');
-            if (myBox) { myBox.classList.remove('hidden'); renderMyProgress(myBox); }
-            return;
-        }
-        if (tableWrap) tableWrap.classList.remove('hidden');
-        if (toolbar) toolbar.classList.remove('hidden');
-        if (addForm) addForm.classList.remove('hidden');
-        if (filters) filters.classList.remove('hidden');
-        if (myBox) myBox.classList.add('hidden');
         sortStudents(currentStudentCourse);
         var list = STUDENTS[currentStudentCourse] || [];
         var q = getStudentSearch();
@@ -741,6 +717,10 @@
             list = list.filter(function(st) {
                 return normText(st.name).indexOf(q) !== -1 || normText(st.code).indexOf(q) !== -1;
             });
+        }
+        if (isStudent() && currentUser) {
+            var myCode = normText(currentUser.code);
+            list = list.filter(function(st) { return normText(st.code) === myCode; });
         }
         var week = getCurrentWeek();
         var weekDate = getWeekDate(currentStudentCourse, week);
@@ -752,7 +732,7 @@
         var gradeLabel = document.getElementById('gradeWeekLabel');
         if (gradeLabel) gradeLabel.textContent = '(S' + week + suffix + ')';
         if (list.length === 0) {
-            body.innerHTML = '<tr><td colspan="9" class="students-empty">No hay estudiantes registrados en esta asignatura. Usa el formulario superior para añadirlos manualmente.</td></tr>';
+            body.innerHTML = '<tr><td colspan="9" class="students-empty">' + (isStudent() ? 'No estás registrado en esta asignatura.' : 'No hay estudiantes registrados en esta asignatura. Usa el formulario superior para añadirlos manualmente.') + '</td></tr>';
         } else {
             body.innerHTML = list.map(function(st, i) {
                 var mark = (st.attendance && st.attendance[week]) || '';
@@ -760,103 +740,37 @@
                 var res = studentAverage(st);
                 var rk = riskInfo(st);
                 var gv = (st.grades && st.grades[week - 1] !== null && st.grades[week - 1] !== undefined) ? st.grades[week - 1] : '';
+                var attCell, noteCell, claveCell, actionCell;
+                if (isStudent()) {
+                    attCell = '<span class="att-static att-' + mark + '">' + (ATT_TEXT[mark] || '—') + '</span>';
+                    noteCell = gv === '' ? '—' : '<strong>' + gv + '</strong>';
+                    claveCell = (st.pass || '—');
+                    actionCell = '<button class="btn btn-download btn-sm" title="Mi constancia" onclick="App.openConstancia(\'' + currentStudentCourse + '\')">🧾</button>';
+                } else {
+                    attCell = '<div class="att-btns">' +
+                        '<button class="att-btn att-p' + (mark === 'P' ? ' active' : '') + '" onclick="App.markAttendance(' + st.id + ',\'P\')" title="Presente">P</button>' +
+                        '<button class="att-btn att-t' + (mark === 'T' ? ' active' : '') + '" onclick="App.markAttendance(' + st.id + ',\'T\')" title="Tardanza">T</button>' +
+                        '<button class="att-btn att-f' + (mark === 'F' ? ' active' : '') + '" onclick="App.markAttendance(' + st.id + ',\'F\')" title="Falta">F</button>' +
+                        '</div>';
+                    noteCell = '<input type="number" class="grade-input" min="0" max="20" value="' + gv + '" onchange="App.setGrade(' + st.id + ',this.value)" aria-label="Nota de trabajo semana ' + week + '">';
+                    claveCell = '<span class="pass-badge" title="Clic para copiar" onclick="App.copyPass(' + st.id + ')">' + (st.pass || '—') + '</span> <button class="btn btn-secondary btn-sm" title="Regenerar clave" onclick="App.regenPass(' + st.id + ')">🔄</button>';
+                    actionCell = '<button class="btn btn-delete-student btn-sm" onclick="App.deleteStudent(' + st.id + ')">🗑️</button> <button class="btn btn-edit-student btn-sm" title="Editar" onclick="App.openEditStudent(' + st.id + ')">✏️</button>';
+                }
                 return '<tr class="' + (rk.risk ? 'at-risk' : '') + '">' +
                     '<td>' + (i + 1) + '</td>' +
                     '<td class="student-name">' + st.name + (rk.risk ? ' <span class="risk-badge" title="' + rk.reasons.join(' · ') + '">⚠️ Riesgo</span>' : '') + '</td>' +
                     '<td>' + (st.code || '—') + '</td>' +
-                    '<td><span class="pass-badge" title="Clic para copiar" onclick="App.copyPass(' + st.id + ')">' + (st.pass || '—') + '</span> <button class="btn btn-secondary btn-sm" title="Regenerar clave" onclick="App.regenPass(' + st.id + ')">🔄</button></td>' +
-                    '<td><div class="att-btns">' +
-                        '<button class="att-btn att-p' + (mark === 'P' ? ' active' : '') + '" onclick="App.markAttendance(' + st.id + ',\'P\')" title="Presente">P</button>' +
-                        '<button class="att-btn att-t' + (mark === 'T' ? ' active' : '') + '" onclick="App.markAttendance(' + st.id + ',\'T\')" title="Tardanza">T</button>' +
-                        '<button class="att-btn att-f' + (mark === 'F' ? ' active' : '') + '" onclick="App.markAttendance(' + st.id + ',\'F\')" title="Falta">F</button>' +
-                    '</div></td>' +
+                    '<td>' + claveCell + '</td>' +
+                    '<td>' + attCell + '</td>' +
                     '<td>' + (stats.pct === null ? '—' : stats.pct + '%') + '<div class="sub-count">' + stats.count + '/' + WEEK_COUNT + ' sem.</div></td>' +
-                    '<td><input type="number" class="grade-input" min="0" max="20" value="' + gv + '" onchange="App.setGrade(' + st.id + ',this.value)" aria-label="Nota de trabajo semana ' + week + '"></td>' +
+                    '<td>' + noteCell + '</td>' +
                     '<td><span class="avg-badge ' + avgClass(res.avg) + '">' + (res.avg === null ? '—' : res.avg) + '</span><div class="sub-count">' + res.count + '/' + WEEK_COUNT + ' sem.</div></td>' +
-                    '<td><button class="btn btn-delete-student btn-sm" onclick="App.deleteStudent(' + st.id + ')">🗑️</button> <button class="btn btn-edit-student btn-sm" title="Editar" onclick="App.openEditStudent(' + st.id + ')">✏️</button></td>' +
+                    '<td>' + actionCell + '</td>' +
                 '</tr>';
             }).join('');
         }
         renderStudentsSummary(list);
         renderDashboard();
-    }
-
-    function renderMyProgress(box) {
-        var enrollments = findEnrollments(currentUser.code, currentUser.name);
-        if (enrollments.length === 0) {
-            box.innerHTML = '<div class="students-empty" style="text-align:center;padding:3rem;">No se encontraron asignaturas para tu código.</div>';
-            return;
-        }
-        box.innerHTML = '<div class="my-hello">👋 Hola, <strong>' + currentUser.name + '</strong> <span>(' + currentUser.code + ')</span></div>' +
-            enrollments.map(function(en) {
-                var st = normalizeStudent(en.student);
-                var stats = attendanceStats(st);
-                var res = studentAverage(st);
-                var chips = '';
-                for (var w = 1; w <= WEEK_COUNT; w++) {
-                    var m = (st.attendance && st.attendance[w]) || '';
-                    var g = (st.grades && st.grades[w - 1] !== null && st.grades[w - 1] !== undefined) ? st.grades[w - 1] : '';
-                    var wd = getWeekDate(en.course, w);
-                    chips += '<span class="wk-chip wk-' + m + '" title="S' + w + (wd ? ' · ' + formatLongDate(wd) : '') + ': ' + (ATT_TEXT[m] || 'Sin marcar') + (g === '' ? '' : ' · Nota ' + g) + '">S' + w + ' ' + (m || '·') + (g === '' ? '' : ' · ' + g) + '</span>';
-                }
-                var prog = Math.round(((stats.count + res.count) / (WEEK_COUNT * 2)) * 100);
-                return '<article class="my-card"><div class="my-card-header"><div><h4>' + getCourseTitle(en.course) + '</h4>' +
-                    '<div class="my-stats"><span class="summary-chip">✅ Asistencia: ' + (stats.pct === null ? '—' : stats.pct + '%') + '</span>' +
-                    '<span class="summary-chip">📈 Promedio: ' + (res.avg === null ? '—' : res.avg) + '</span>' +
-                    '<span class="summary-chip">📅 ' + stats.count + '/' + WEEK_COUNT + ' sem.</span></div></div>' +
-                    '<div class="my-card-side"><span class="avg-badge ' + avgClass(res.avg) + '">' + (res.avg === null ? '—' : res.avg) + '</span>' +
-                    '<button class="btn btn-download btn-sm" onclick="App.openConstancia(\'' + en.course + '\')">🧾 Constancia</button></div></div>' +
-                    '<div class="bar-track" style="margin-bottom:1.25rem;"><div class="bar-fill orange" style="width:' + prog + '%"></div></div>' +
-                    '<div class="wk-grid">' + chips + '</div></article>';
-            }).join('');
-    }
-
-    function getStudentSearch() {
-        var input = document.getElementById('studentSearch');
-        return input ? normText(input.value) : '';
-    }
-
-    function openEditStudent(id) {
-        var list = STUDENTS[currentStudentCourse] || [];
-        var st = list.find(function(s) { return s.id === id; });
-        if (!st) return;
-        closeModal('editModal');
-        var modal = document.createElement('div');
-        modal.id = 'editModal';
-        modal.className = 'edit-modal';
-        modal.innerHTML = '<div class="edit-modal-content"><div class="edit-modal-header"><h3>✏️ Editar Estudiante</h3><p>Modifica los datos del estudiante</p></div><div class="edit-modal-body"><form id="editStudentForm"><div class="form-group"><label for="editStudentName">Apellidos y Nombres</label><input type="text" id="editStudentName" value="' + st.name + '" required maxlength="100"></div><div class="form-group"><label for="editStudentCode">Código</label><input type="text" id="editStudentCode" value="' + (st.code || '') + '" required maxlength="20"></div><div class="form-group"><label>Contraseña actual</label><input type="text" value="' + (st.pass || '') + '" disabled></div></form></div><div class="edit-modal-footer"><button class="btn btn-secondary" onclick="closeModal(\'editModal\')">Cancelar</button><button class="btn btn-primary" onclick="App.saveEditStudent(' + id + ')">💾 Guardar Cambios</button></div></div>';
-        document.body.appendChild(modal);
-        requestAnimationFrame(function() { modal.classList.add('active'); });
-        modal.addEventListener('click', function(e) { if (e.target === modal) closeModal('editModal'); });
-    }
-
-    function saveEditStudent(id) {
-        var name = document.getElementById('editStudentName')?.value.trim();
-        var code = document.getElementById('editStudentCode')?.value.trim();
-        if (!name || !code) { showToast('error', 'Nombre y código son obligatorios.'); return; }
-        var list = STUDENTS[currentStudentCourse] || [];
-        var dup = list.find(function(s) { return s.id !== id && normText(s.code) === normText(code); });
-        if (dup) { showToast('error', 'Ya existe otro estudiante con ese código.'); return; }
-        var st = list.find(function(s) { return s.id === id; });
-        if (st) { st.name = name; st.code = code; }
-        sortStudents(currentStudentCourse);
-        saveStudents();
-        closeModal('editModal');
-        renderStudents();
-        showToast('success', '✅ Estudiante actualizado.');
-    }
-
-    function markAllPresent() {
-        var list = STUDENTS[currentStudentCourse] || [];
-        if (list.length === 0) { showToast('info', 'No hay estudiantes en esta asignatura.'); return; }
-        var week = getCurrentWeek();
-        list.forEach(function(st) {
-            if (!st.attendance) st.attendance = {};
-            st.attendance[week] = 'P';
-        });
-        saveStudents();
-        renderStudents();
-        showToast('success', '✅ Semana ' + week + ': todos marcados presentes.');
     }
 
     function renderStudentsSummary(list) {
